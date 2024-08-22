@@ -5,114 +5,117 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import {FlashList} from '@shopify/flash-list';
+import React, {useState} from 'react';
 import {
   SafeAreaView,
   ScrollView,
-  StatusBar,
-  StyleSheet,
   Text,
-  useColorScheme,
   View,
+  TouchableHighlight,
+  ScaledSize,
+  useWindowDimensions,
+  Button,
 } from 'react-native';
+import tinycolor from 'tinycolor2';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Header} from 'react-native/Libraries/NewAppScreen';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+const CARD_SIZE = {
+  width: 152,
+  height: 220,
+};
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+const LIST_CONTAINER_PADDING = 32;
+
+const LIST_SIZE = (window: ScaledSize) => ({
+  height: CARD_SIZE.height + LIST_CONTAINER_PADDING * 2,
+  width: window.width,
+});
+
+type Card = {
+  color: string;
+};
+
+const HeaderFooter = () => {
+  return <View style={{width: 20}} />;
+};
+
+const Separator = () => {
+  return <View style={{width: 8}} />;
+};
+
+const Card = ({color}: {color: string}) => {
+  const backgroundColor = tinycolor(color).setAlpha(0.5).toRgbString();
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+    <TouchableHighlight
+      style={{
+        backgroundColor,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: CARD_SIZE.width,
+        height: CARD_SIZE.height,
+        borderRadius: 8,
+      }}
+      onPress={() => console.warn('it worked!')}>
+      <Text>press me</Text>
+    </TouchableHighlight>
   );
-}
+};
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+const data: Card[] = [
+  {color: 'yellow'},
+  {color: 'red'},
+  {color: 'green'},
+  {color: 'blue'},
+  {color: 'brown'},
+];
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+const App = () => {
+  const window = useWindowDimensions();
+
+  const [items, setItems] = useState<Card[]>(data.slice(0, 1));
+
+  const renderItem = ({item}: {item: Card}) => {
+    return <Card color={item.color} />;
   };
 
+  const keyExtractor = ({color}: {color: string}) => color;
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
+    <SafeAreaView>
+      <ScrollView contentInsetAdjustmentBehavior="automatic">
         <Header />
+        <FlashList
+          contentContainerStyle={{
+            paddingVertical: LIST_CONTAINER_PADDING,
+          }}
+          data={items}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          estimatedListSize={LIST_SIZE(window)}
+          estimatedItemSize={CARD_SIZE.width}
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          ListHeaderComponent={HeaderFooter}
+          ListFooterComponent={HeaderFooter}
+          ItemSeparatorComponent={Separator}
+          removeClippedSubviews
+        />
         <View
           style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: 100,
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+          <Button
+            title="toogle list"
+            onPress={() => setItems(items.length > 1 ? data.slice(0, 1) : data)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
-}
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+};
 
 export default App;
